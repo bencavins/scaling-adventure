@@ -40,7 +40,7 @@ def sweets():
     data = [s.to_dict() for s in sweets]
     return make_response(jsonify(data), 200)
 
-@app.route('/sweets/<int:id>')
+@app.route('/sweets/<int:id>', methods=['GET', 'PATCH'])
 def sweet_by_id(id):
     sweet = Sweet.query.filter(Sweet.id == id).first()
 
@@ -49,7 +49,18 @@ def sweet_by_id(id):
             'error': 'Sweet not found'
         }), 404)
 
-    return make_response(jsonify(sweet.to_dict()), 200)
+    if request.method == 'GET':
+        return make_response(jsonify(sweet.to_dict()), 200)
+    
+    elif request.method == 'PATCH':
+        data = request.get_json()
+        for field, value in data.items():
+            setattr(sweet, field, value)
+        # for key in data:
+        #     setattr(sweet, key, data[key])
+        db.session.add(sweet)
+        db.session.commit()
+        return make_response(jsonify(sweet.to_dict()), 200)
 
 @app.route('/vendor_sweets', methods=['POST'])
 def vendor_sweets():
